@@ -34,28 +34,44 @@ def listar_filiais():
 
 @app.post("/api/logs")
 async def receber_log(request: Request):
-    """Recebe logs e atualiza a filial"""
+    """Recebe logs e atualiza ou cria um novo log para a filial e terminal"""
     try:
         dados = await request.json()
 
-        # Atualiza ou cria filial
-        filiais_col.update_one(
-            {"filial": dados["filial"]},
+        # Verifica se já existe um log para a mesma filial e terminal
+        filtro = {"filial": dados["filial"], "terminal": dados["terminal"]}
+
+        # Atualiza o log se a combinação de filial e terminal já existir
+        resultado = filiais_col.update_one(
+            filtro,
             {"$set": {
                 "filial": dados["filial"],
-                "terminal": dados.get("terminal", "DESCONHECIDO"),
+                "terminal": dados["terminal"],
                 "versao": dados.get("versao", "1.0.0"),
                 "status": dados.get("status", "OK"),
                 "detalhe": dados.get("detalhe", ""),
                 "ultima_execucao": dados.get("data")
             }},
-            upsert=True
+            upsert=False  # Não cria novo registro se não encontrar um existente
         )
+
+        # Se nenhum documento foi atualizado, significa que a combinação filial + terminal não existe, então cria um novo
+        if resultado.matched_count == 0:
+            # Inserir um novo log se não encontrou o existente
+            filiais_col.insert_one({
+                "filial": dados["filial"],
+                "terminal": dados["terminal"],
+                "versao": dados.get("versao", "1.0.0"),
+                "status": dados.get("status", "OK"),
+                "detalhe": dados.get("detalhe", ""),
+                "ultima_execucao": dados.get("data")
+            })
 
         return {"msg": "✅ Dados da filial atualizados com sucesso"}
 
     except Exception as e:
         raise HTTPException(400, detail=f"Erro ao salvar dados da filial: {e}")
+
 
 
 
@@ -81,10 +97,5 @@ async def save_config(request: Request):
     return {"msg": "Configuração atualizada"}
 
 
-# =====================================
-# 🧪 TESTE RÁPIDO
-# =====================================
 
-@app.get("/api/test")
-def test():
-    return {"status": "ok", "hora": datetime.now().strftime("%d/%m/%Y %H:%M:%S")}
+
