@@ -29,30 +29,16 @@ def listar_filiais():
     return JSONResponse(filiais)
 
 
-@app.get("/api/logs/{filial}")
-def listar_logs(filial: str):
-    """Retorna os logs de uma filial"""
-    logs = list(
-        logs_col.find({"filial": filial}, {"_id": 0}).sort("data_execucao", -1).limit(200)
-    )
-    if not logs:
-        raise HTTPException(status_code=404, detail="Nenhum log encontrado.")
-    return JSONResponse(logs)
-
-
 # =====================================
 # 📤 RECEBIMENTO DE LOGS (valida_bkp e launcher)
 # =====================================
 
 @app.post("/api/logs")
 async def receber_log(request: Request):
-    """Recebe logs de valida_bkp ou launcher"""
+    """Recebe logs e atualiza a filial"""
     try:
         dados = await request.json()
         dados["data_execucao"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        # Salva log no histórico
-        logs_col.insert_one(dados)
 
         # Atualiza ou cria filial
         filiais_col.update_one(
@@ -68,10 +54,11 @@ async def receber_log(request: Request):
             upsert=True
         )
 
-        return {"msg": "✅ Log recebido com sucesso"}
+        return {"msg": "✅ Dados da filial atualizados com sucesso"}
 
     except Exception as e:
-        raise HTTPException(400, detail=f"Erro ao salvar log: {e}")
+        raise HTTPException(400, detail=f"Erro ao salvar dados da filial: {e}")
+
 
 
 # =====================================

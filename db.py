@@ -10,4 +10,4 @@ db = client[DB_NAME]
 
 # Coleções
 filiais_col = db["filiais"]
-logs_col = db["logs"]
+
