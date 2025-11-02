@@ -37,7 +37,6 @@ async def receber_log(request: Request):
     """Recebe logs e atualiza a filial"""
     try:
         dados = await request.json()
-        dados["data_execucao"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # Atualiza ou cria filial
         filiais_col.update_one(
@@ -48,7 +47,7 @@ async def receber_log(request: Request):
                 "versao": dados.get("versao", "1.0.0"),
                 "status": dados.get("status", "OK"),
                 "detalhe": dados.get("detalhe", ""),
-                "ultima_execucao": dados["data_execucao"]
+                "ultima_execucao": dados.get("data")
             }},
             upsert=True
         )
