@@ -3,7 +3,6 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from db import filiais_col
-from models import Log
 import json, os
 
 app = FastAPI(title="Monitoramento Filiais API")
