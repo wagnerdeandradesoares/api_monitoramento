@@ -5,7 +5,7 @@ from datetime import datetime
 from db import filiais_col
 import json, os
 
-app = FastAPI(title="Monitoramento Filiais API")
+app = FastAPI(title="Monitoramento API")
 
 # 🔓 CORS — permite que o frontend acesse a API
 app.add_middleware(
@@ -91,10 +91,22 @@ def get_config():
 @app.post("/api/config")
 async def save_config(request: Request):
     """Atualiza o config.json"""
-    dados = await request.json()
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(dados, f, indent=2, ensure_ascii=False)
-    return {"msg": "Configuração atualizada"}
+    try:
+        dados = await request.json()  # Recebe os dados do corpo da requisição
+        # Verificação simples para garantir que os dados não estejam vazios
+        if not dados:
+            raise HTTPException(status_code=400, detail="Dados inválidos ou vazios.")
+
+        # Salvar no arquivo config.json
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(dados, f, indent=2, ensure_ascii=False)
+        return {"msg": "Configuração atualizada com sucesso!"}
+
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Erro ao processar os dados enviados.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao salvar a configuração: {str(e)}")
+
 
 
 
