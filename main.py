@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
+from datetime import datetime, time
 from db import filiais_col, arquivos_col
 import json, os
 
@@ -162,5 +162,39 @@ async def editar_arquivo(nome: str, request: Request):
         return {"msg": "✅ Arquivo atualizado com sucesso!"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao editar arquivo: {str(e)}")
+
+
+# =====================================
+# 🖥️ EXECUÇÃO DE ARQUIVOS PROGRAMADOS
+# =====================================
+
+# Endpoint para listar os arquivos programados para execução
+@app.get("/api/execucao")
+def listar_execucoes():
+    """Lista todos os arquivos agendados para execução"""
+    execucoes = list(arquivos_col.find({"ativo": True}, {"_id": 0}))
+    return JSONResponse(execucoes)
+
+
+# Endpoint para agendar um arquivo para execução
+@app.post("/api/execucao")
+async def agendar_execucao(request: Request):
+    """Agendar um novo arquivo para execução em horários ou intervalos específicos"""
+    try:
+        dados = await request.json()
+
+        # Validação de campos obrigatórios
+        if not all(key in dados for key in ["nome", "ativo", "horario", "local"]):
+            raise HTTPException(status_code=400, detail="Campos obrigatórios ausentes.")
+
+        # Adiciona o agendamento de execução no banco de dados
+        arquivos_col.insert_one(dados)
+
+        return {"msg": "✅ Arquivo agendado para execução com sucesso!"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao agendar execução: {str(e)}")
+
+
 
 
