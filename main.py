@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
-from db import filiais_col
+from db import filiais_col, arquivos_col
 import json, os
 
 app = FastAPI(title="Monitoramento API")
@@ -108,6 +108,55 @@ async def save_config(request: Request):
         raise HTTPException(status_code=500, detail=f"Erro ao salvar a configuração: {str(e)}")
 
 
+# Endpoint para listar arquivos
+@app.get("/api/arquivos")
+def listar_arquivos():
+    """Lista todos os arquivos cadastrados no banco"""
+    arquivos = list(arquivos_col.find({}, {"_id": 0}))
+    return JSONResponse(arquivos)
 
+
+# Endpoint para adicionar arquivo
+@app.post("/api/arquivos")
+async def adicionar_arquivo(request: Request):
+    """Adiciona um novo arquivo ao banco"""
+    try:
+        dados = await request.json()
+
+        # Verifica se todos os campos estão presentes
+        if not all(key in dados for key in ["nome", "url", "descricao", "destino", "versao"]):
+            raise HTTPException(status_code=400, detail="Campos incompletos.")
+
+        # Adiciona o arquivo à coleção
+        arquivos_col.insert_one(dados)
+
+        return {"msg": "✅ Arquivo adicionado com sucesso!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao adicionar arquivo: {str(e)}")
+
+
+# Endpoint para editar arquivo
+@app.put("/api/arquivos/{nome}")
+async def editar_arquivo(nome: str, request: Request):
+    """Edita as informações de um arquivo no banco"""
+    try:
+        dados = await request.json()
+
+        # Verifica se os campos necessários estão presentes
+        if not all(key in dados for key in ["url", "descricao", "destino", "versao"]):
+            raise HTTPException(status_code=400, detail="Campos incompletos.")
+
+        # Atualiza o arquivo no banco de dados
+        resultado = arquivos_col.update_one(
+            {"nome": nome},
+            {"$set": dados}
+        )
+
+        if resultado.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Arquivo não encontrado.")
+
+        return {"msg": "✅ Arquivo atualizado com sucesso!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao editar arquivo: {str(e)}")
 
 

@@ -10,4 +10,7 @@ db = client[DB_NAME]
 
 # Coleções
 filiais_col = db["filiais"]
+# Coleção de arquivos
+arquivos_col = db["arquivos"]
+
 
