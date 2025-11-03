@@ -123,6 +123,9 @@ async def adicionar_arquivo(request: Request):
     try:
         dados = await request.json()
 
+        # Imprime os dados recebidos para depuração
+        print(f"Dados recebidos: {dados}")
+
         # Verifica se todos os campos estão presentes
         if not all(key in dados for key in ["nome", "url", "descricao", "destino", "versao"]):
             raise HTTPException(status_code=400, detail="Campos incompletos.")
@@ -133,6 +136,7 @@ async def adicionar_arquivo(request: Request):
         return {"msg": "✅ Arquivo adicionado com sucesso!"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao adicionar arquivo: {str(e)}")
+
 
 
 # Endpoint para editar arquivo
