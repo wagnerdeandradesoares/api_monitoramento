@@ -13,6 +13,6 @@ filiais_col = db["filiais"]
 # Coleção de arquivos
 arquivos_col = db["arquivos"]
 
-arquivos_col = db["executar_arquivos"]  # Coleção para armazenar os arquivos a serem executados
+excecutar_col = db["executar_arquivos"]  # Coleção para armazenar os arquivos a serem executados
 
 
