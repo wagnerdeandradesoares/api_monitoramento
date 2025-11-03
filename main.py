@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, time
-from db import filiais_col, arquivos_col
+from db import filiais_col, arquivos_col, executar_arquivos
 import json, os
 
 app = FastAPI(title="Monitoramento API")
@@ -172,7 +172,7 @@ async def editar_arquivo(nome: str, request: Request):
 @app.get("/api/execucao")
 def listar_execucoes():
     """Lista todos os arquivos agendados para execução"""
-    execucoes = list(arquivos_col.find({"ativo": True}, {"_id": 0}))
+    execucoes = list(executar_arquivos.find({"ativo": True}, {"_id": 0}))
     return JSONResponse(execucoes)
 
 
@@ -188,7 +188,7 @@ async def agendar_execucao(request: Request):
             raise HTTPException(status_code=400, detail="Campos obrigatórios ausentes.")
 
         # Adiciona o agendamento de execução no banco de dados
-        arquivos_col.insert_one(dados)
+        executar_arquivos.insert_one(dados)
 
         return {"msg": "✅ Arquivo agendado para execução com sucesso!"}
 
