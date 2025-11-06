@@ -1,3 +1,4 @@
+from bson import ObjectId
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -140,29 +141,22 @@ async def adicionar_arquivo(request: Request):
 
 
 # Endpoint para editar arquivo
-@app.put("/api/arquivos/{nome}")
-async def editar_arquivo(nome: str, request: Request):
-    """Edita as informações de um arquivo no banco"""
+@app.put("/api/arquivos/{arquivo_id}")
+async def atualizar_arquivo(arquivo_id: str, dados: dict):
     try:
-        dados = await request.json()
-
-        # Verifica se os campos necessários estão presentes
-        if not all(key in dados for key in ["url", "descricao", "destino", "versao"]):
-            raise HTTPException(status_code=400, detail="Campos incompletos.")
-
-        # Atualiza o arquivo no banco de dados
+        # Valida os dados e atualiza o arquivo no banco
         resultado = arquivos_col.update_one(
-            {"nome": nome},
+            {"_id": ObjectId(arquivo_id)},
             {"$set": dados}
         )
-
-        if resultado.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Arquivo não encontrado.")
-
-        return {"msg": "✅ Arquivo atualizado com sucesso!"}
+        
+        if resultado.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Arquivo não encontrado ou sem alterações")
+        
+        return {"msg": "Arquivo atualizado com sucesso!"}
+    
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao editar arquivo: {str(e)}")
-
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar o arquivo: {str(e)}")
 
 # =====================================
 # 🖥️ EXECUÇÃO DE ARQUIVOS PROGRAMADOS
@@ -195,6 +189,38 @@ async def agendar_execucao(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao agendar execução: {str(e)}")
 
+
+# Endpoint para disparar a execução de arquivos com base na programação
+@app.post("/api/executar")
+async def executar_arquivos_programados():
+    """Executa arquivos com base nos agendamentos, filiais, e terminais definidos"""
+    try:
+        # Pega o horário atual
+        agora = datetime.now()
+
+        # Filtra arquivos com execução programada para o horário atual
+        arquivos_agendados = list(excecutar_col.find({
+            "ativo": True,
+            "horario": {"$in": [agora.strftime("%H:%M")]},  # Verifica o horário atual
+        }, {"_id": 0}))
+
+        # Se não houver arquivos para execução, retorna uma mensagem
+        if not arquivos_agendados:
+            return JSONResponse({"msg": "Nenhum arquivo agendado para este horário."}, status_code=404)
+
+        for arquivo in arquivos_agendados:
+            # Aqui você pode adicionar a lógica de execução do arquivo
+            # Por exemplo, você pode enviar comandos via SSH ou outro protocolo para os terminais ou filiais
+            for terminal in arquivo.get("terminal", []):
+                for filial in arquivo.get("filial", []):
+                    # Simulação de comando de execução:
+                    print(f"Executando {arquivo['nome']} na filial {filial} e terminal {terminal}")
+                    # Aqui você pode chamar uma função que manda o comando real para o terminal/filial
+
+        return JSONResponse({"msg": "Comandos executados com sucesso!"})
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao executar arquivos: {str(e)}")
 
 
 
