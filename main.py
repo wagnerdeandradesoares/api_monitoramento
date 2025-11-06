@@ -139,15 +139,17 @@ async def adicionar_arquivo(request: Request):
         raise HTTPException(status_code=500, detail=f"Erro ao adicionar arquivo: {str(e)}")
 
 # Endpoint para buscar um arquivo pelo ID
+# Endpoint para buscar um arquivo específico por ID
 @app.get("/api/arquivos/{arquivo_id}")
 async def obter_arquivo(arquivo_id: str):
     try:
+        # Verifique se o ID está sendo recebido corretamente como string
         arquivo = arquivos_col.find_one({"_id": ObjectId(arquivo_id)})
 
         if not arquivo:
             raise HTTPException(status_code=404, detail="Arquivo não encontrado")
 
-        # Remover o campo _id para evitar envio de informações desnecessárias
+        # Certifique-se de que o MongoDB retorna os dados sem o _id
         arquivo["_id"] = str(arquivo["_id"])  # Convertendo ObjectId para string
         return arquivo
 
