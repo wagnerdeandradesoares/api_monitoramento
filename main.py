@@ -138,7 +138,21 @@ async def adicionar_arquivo(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao adicionar arquivo: {str(e)}")
 
+# Endpoint para buscar um arquivo pelo ID
+@app.get("/api/arquivos/{arquivo_id}")
+async def obter_arquivo(arquivo_id: str):
+    try:
+        arquivo = arquivos_col.find_one({"_id": ObjectId(arquivo_id)})
 
+        if not arquivo:
+            raise HTTPException(status_code=404, detail="Arquivo não encontrado")
+
+        # Remover o campo _id para evitar envio de informações desnecessárias
+        arquivo["_id"] = str(arquivo["_id"])  # Convertendo ObjectId para string
+        return arquivo
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar arquivo: {str(e)}")
 
 # Endpoint para editar arquivo
 @app.put("/api/arquivos/{arquivo_id}")
