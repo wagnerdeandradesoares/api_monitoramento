@@ -6,8 +6,6 @@ from datetime import datetime, time
 from db import filiais_col, arquivos_col, excecutar_col
 import json, os
 
-import db
-
 app = FastAPI(title="Monitoramento API")
 
 # 🔓 CORS — permite que o frontend acesse a API
@@ -139,22 +137,30 @@ async def adicionar_arquivo(request: Request):
         return {"msg": "✅ Arquivo adicionado com sucesso!"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao adicionar arquivo: {str(e)}")
-
+    
 @app.get("/api/arquivos/{arquivo_id}")
 async def obter_arquivo(arquivo_id: str):
-    """Endpoint para obter um arquivo específico pelo ID."""
     try:
-        arquivo = db['arquivos'].find_one({"_id": ObjectId(arquivo_id)})  # Acessando a coleção correta
-        if arquivo:
-            return arquivo
-        raise HTTPException(status_code=404, detail="Arquivo não encontrado")
+        # Verifique se o ID está sendo recebido corretamente como string
+        arquivo = arquivos_col.find_one({"_id": ObjectId(arquivo_id)})
+
+        if not arquivo:
+            raise HTTPException(status_code=404, detail="Arquivo não encontrado")
+
+        # Certifique-se de que o MongoDB retorna os dados sem o _id
+        arquivo["_id"] = str(arquivo["_id"])  # Convertendo ObjectId para string
+        return arquivo
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao buscar arquivo: {str(e)}")
+    
+    
 
 
-# Endpoint para editar arquivo
-@app.put("/api/arquivos/{nome}")
-async def editar_arquivo(nome: str, request: Request):
+
+# Endpoint para editar arquivo usando o ID ao invés do nome
+@app.put("/api/arquivos/{id}")
+async def editar_arquivo(id: str, request: Request):
     """Edita as informações de um arquivo no banco"""
     try:
         dados = await request.json()
@@ -165,7 +171,7 @@ async def editar_arquivo(nome: str, request: Request):
 
         # Atualiza o arquivo no banco de dados
         resultado = arquivos_col.update_one(
-            {"nome": nome},
+            {"_id": id},  # Agora usando o id para localizar o arquivo
             {"$set": dados}
         )
 
@@ -175,6 +181,7 @@ async def editar_arquivo(nome: str, request: Request):
         return {"msg": "✅ Arquivo atualizado com sucesso!"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao editar arquivo: {str(e)}")
+
 
 
 # =====================================
