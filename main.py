@@ -116,7 +116,11 @@ def listar_arquivos():
     """Lista todos os arquivos cadastrados no banco"""
     try:
         # Consultando a coleção e incluindo o campo _id
-        arquivos = list(arquivos_col.find({}, {"_id": 1, "nome": 1, "versao": 1, "descricao": 1, "destino": 1}))
+        arquivos = list(arquivos_col.find({}))
+        # Convertendo ObjectId para string para serialização JSON
+        for item in arquivos:
+            if "_id" in item:
+                item["_id"] = str(item["_id"])
         return JSONResponse(arquivos)
     except Exception as e:
         print(f"Erro ao listar arquivos: {e}")  # Adicionando log para depuração
