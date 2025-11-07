@@ -6,6 +6,8 @@ from datetime import datetime, time
 from db import filiais_col, arquivos_col, excecutar_col
 import json, os
 
+import db
+
 app = FastAPI(title="Monitoramento API")
 
 # 🔓 CORS — permite que o frontend acesse a API
