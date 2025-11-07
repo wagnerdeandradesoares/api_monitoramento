@@ -113,8 +113,9 @@ async def save_config(request: Request):
 @app.get("/api/arquivos")
 def listar_arquivos():
     """Lista todos os arquivos cadastrados no banco"""
-    arquivos = list(arquivos_col.find({}, {"_id": 0}))
+    arquivos = list(arquivos_col.find({}, {"_id": 1, "nome": 1, "versao": 1, "descricao": 1, "destino": 1}))
     return JSONResponse(arquivos)
+
 
 
 # Endpoint para adicionar arquivo
@@ -137,6 +138,8 @@ async def adicionar_arquivo(request: Request):
         return {"msg": "✅ Arquivo adicionado com sucesso!"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao adicionar arquivo: {str(e)}")
+    
+    
     
 @app.get("/api/arquivos/{arquivo_id}")
 async def obter_arquivo(arquivo_id: str):
