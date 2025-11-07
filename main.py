@@ -115,7 +115,7 @@ def listar_arquivos():
     """Lista todos os arquivos cadastrados no banco"""
     try:
         # Aqui você retorna os arquivos, incluindo o _id explicitamente
-        arquivos = list(arquivos_col.find({}, {"_id": 1, "nome": 1, "versao": 1, "descricao": 1, "destino": 1}))
+        arquivos = list(arquivos_col.find({}, {}))  # Sem restrição de campos
         return JSONResponse(arquivos)
     except Exception as e:
         # Captura qualquer erro que aconteça e imprime no log
