@@ -109,12 +109,19 @@ async def save_config(request: Request):
         raise HTTPException(status_code=500, detail=f"Erro ao salvar a configuração: {str(e)}")
 
 
+
 # Endpoint para listar arquivos
 @app.get("/api/arquivos")
 def listar_arquivos():
     """Lista todos os arquivos cadastrados no banco"""
-    arquivos = list(arquivos_col.find({}, {"_id": 1}))
-    return JSONResponse(arquivos)
+    try:
+        # Consultando a coleção e incluindo o campo _id
+        arquivos = list(arquivos_col.find({}, {"_id": 1, "nome": 1, "versao": 1, "descricao": 1, "destino": 1}))
+        return JSONResponse(arquivos)
+    except Exception as e:
+        print(f"Erro ao listar arquivos: {e}")  # Adicionando log para depuração
+        raise HTTPException(status_code=500, detail="Erro ao listar arquivos")
+
 
 
 # Endpoint para adicionar arquivo
