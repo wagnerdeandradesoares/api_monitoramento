@@ -140,7 +140,6 @@ async def adicionar_arquivo(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao adicionar arquivo: {str(e)}")
 
-# Endpoint para buscar um arquivo pelo ID
 @app.get("/api/arquivos/{arquivo_id}")
 async def obter_arquivo(arquivo_id: str):
     """Endpoint para obter um arquivo específico pelo ID."""
@@ -154,22 +153,29 @@ async def obter_arquivo(arquivo_id: str):
 
 
 # Endpoint para editar arquivo
-@app.put("/api/arquivos/{arquivo_id}")
-async def atualizar_arquivo(arquivo_id: str, dados: dict):
+@app.put("/api/arquivos/{nome}")
+async def editar_arquivo(nome: str, request: Request):
+    """Edita as informações de um arquivo no banco"""
     try:
-        # Valida os dados e atualiza o arquivo no banco
+        dados = await request.json()
+
+        # Verifica se os campos necessários estão presentes
+        if not all(key in dados for key in ["url", "descricao", "destino", "versao"]):
+            raise HTTPException(status_code=400, detail="Campos incompletos.")
+
+        # Atualiza o arquivo no banco de dados
         resultado = arquivos_col.update_one(
-            {"_id": ObjectId(arquivo_id)},
+            {"nome": nome},
             {"$set": dados}
         )
-        
-        if resultado.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Arquivo não encontrado ou sem alterações")
-        
-        return {"msg": "Arquivo atualizado com sucesso!"}
-    
+
+        if resultado.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Arquivo não encontrado.")
+
+        return {"msg": "✅ Arquivo atualizado com sucesso!"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao atualizar o arquivo: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao editar arquivo: {str(e)}")
+
 
 # =====================================
 # 🖥️ EXECUÇÃO DE ARQUIVOS PROGRAMADOS
