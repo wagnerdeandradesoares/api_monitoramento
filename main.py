@@ -113,15 +113,8 @@ async def save_config(request: Request):
 @app.get("/api/arquivos")
 def listar_arquivos():
     """Lista todos os arquivos cadastrados no banco"""
-    try:
-        # Aqui você retorna os arquivos, incluindo o _id explicitamente
-        arquivos = list(arquivos_col.find({}, {}))  # Sem restrição de campos
-        return JSONResponse(arquivos)
-    except Exception as e:
-        # Captura qualquer erro que aconteça e imprime no log
-        print(f"Erro ao buscar arquivos: {e}")
-        raise HTTPException(status_code=500, detail="Erro ao listar arquivos")
-
+    arquivos = list(arquivos_col.find({}, {"_id": 1}))
+    return JSONResponse(arquivos)
 
 
 # Endpoint para adicionar arquivo
