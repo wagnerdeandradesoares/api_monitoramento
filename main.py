@@ -113,8 +113,14 @@ async def save_config(request: Request):
 @app.get("/api/arquivos")
 def listar_arquivos():
     """Lista todos os arquivos cadastrados no banco"""
-    arquivos = list(arquivos_col.find({}, {"_id": 1, "nome": 1, "versao": 1, "descricao": 1, "destino": 1}))
-    return JSONResponse(arquivos)
+    try:
+        # Aqui você retorna os arquivos, incluindo o _id explicitamente
+        arquivos = list(arquivos_col.find({}, {"_id": 1, "nome": 1, "versao": 1, "descricao": 1, "destino": 1}))
+        return JSONResponse(arquivos)
+    except Exception as e:
+        # Captura qualquer erro que aconteça e imprime no log
+        print(f"Erro ao buscar arquivos: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao listar arquivos")
 
 
 
